@@ -7,7 +7,7 @@ import models
 
 
 def get_player(db: Session, player_id: int):
-    return db.query(models.Player).filter(models.Player.id == player_id).first()
+    return db.query(models.Player).filter(models.Player.player_id == player_id).first()
 
 
 def get_players(db: Session, skip: int = 0, limit: int = 100, min_last_changed_date: date = None,
@@ -15,7 +15,7 @@ def get_players(db: Session, skip: int = 0, limit: int = 100, min_last_changed_d
     query = db.query(models.Player)
 
     if min_last_changed_date:
-        query = query.filter(models.Player.last_changed >=
+        query = query.filter(models.Player.last_changed_date >=
                              min_last_changed_date)
     if first_name:
         query = query.filter(models.Player.first_name == first_name)
