@@ -6,12 +6,31 @@ import crud
 import schemas
 from database import SessionLocal  # SQLAlchemy session
 
-app = FastAPI()
+api_description = """
+This API provides read-only access to info from the Sports World Central (SWC) Fantasy Football API. 
+The endpoints are grouped into the following categories:
+
+## Analytics
+Get information about health of the API and counts of leagues, teams, and players.
+
+## Player
+You can get a list of an NFL players, or search for an individual player by player_id.
+
+## Scoring
+You can get a list of NFL player performances, including the fantasy points they scored using SWC league scoring.
+
+## Membership
+Get information about all the SWC fantasy football leagues and the teams in them.
+"""
+
+app = FastAPI(
+    description=api_description,
+    title="Sports World Central Fantasy Football API",
+    version="0.1.0"
+)
 
 # Database dependency
 # Uses depdendency injection to get a database session for the current request
-
-
 def get_db():
     db = SessionLocal()
     try:
@@ -19,11 +38,15 @@ def get_db():
     finally:
         db.close()
 
-# Root endpoint
-# Returns a simple message to check if the API is running
 
-
-@app.get("/")
+@app.get(
+    "/",
+    summary="Check to see if the SWC fantasy football API is running",
+    description="""Use this endpoint to check if the API is running. You can also check it first before making other calls to be sure it's running.""",
+    response_description="A JSON record with a message in it. If the API is running the message will say successful.",
+    operation_id="v0_health_check",
+    tags=["analytics"],
+)
 async def root():
     return {"message": "API health check successful"}
 
@@ -44,7 +67,15 @@ def read_players(skip: int = 0, limit: int = 100,
     return players
 
 
-@app.get("/v0/players/{player_id}", response_model=schemas.Player)
+@app.get(
+    "/v0/players/{player_id}",
+    response_model=schemas.Player,
+    summary="Get one player using the Player ID, which is internal to SWC",
+    description="If you have an SWC Player ID of a player from another API call such as v0_get_players, you can call this API using the player ID",
+    response_description="One NFL player",
+    operation_id="v0_get_players_by_player_id",
+    tags=["players"],
+)
 def read_player(player_id: int, db: Session = Depends(get_db)):
     player = crud.get_player(db, player_id=player_id)
 
@@ -55,7 +86,15 @@ def read_player(player_id: int, db: Session = Depends(get_db)):
     return player
 
 
-@app.get("/v0/performances/", response_model=list[schemas.Performance])
+@app.get(
+    "/v0/performances/",
+    response_model=list[schemas.Performance],
+    summary="Get all the weekly performances that meet all the parameters you sent with your request",
+    description="""Use this endpoint to get lists of weekly performances by players in the SWC. You us the skip and limit to perform pagination of the API. Don't use the Performance ID for counting or logic, because that is an internal ID and is not guaranteed to be sequential""",
+    response_description="A list of weekly scoring performances. It may be by multiple players.",
+    operation_id="v0_get_performances",
+    tags=["scoring"],
+)
 def read_performances(skip: int = 0,
                       limit: int = 100,
                       minimum_last_changed_date: date = None,
@@ -67,7 +106,15 @@ def read_performances(skip: int = 0,
     return performances
 
 
-@app.get("/v0/leagues/{league_id}", response_model=schemas.League)
+@app.get(
+    "/v0/leagues/{league_id}",
+    response_model=schemas.League,
+    summary="Get one league by league id",
+    description="""Use this endpoint to get a single league that matches the league ID provided by the user.""",
+    response_description="An SWC league",
+    operation_id="v0_get_league_by_league_id",
+    tags=["membership"],
+)
 def read_league(league_id: int, db: Session = Depends(get_db)):
     league = crud.get_league(db, league_id=league_id)
 
@@ -77,8 +124,15 @@ def read_league(league_id: int, db: Session = Depends(get_db)):
 
     return league
 
-
-@app.get("/v0/leagues/", response_model=list[schemas.League])
+@app.get(
+    "/v0/leagues/",
+    response_model=list[schemas.League],
+    summary="Get all the SWC fantasy football leagues that match the parameters you send",
+    description="""Use this endpoint to get lists of SWC fantasy football leagues. You us the skip and limit to perform pagination of the API. League name is not guaranteed to be unique. Don't use the League ID for counting or logic, because that is an internal ID and is not guaranteed to be sequential""",
+    response_description="A list of leagues on the SWC fantasy football website.",
+    operation_id="v0_get_leagues",
+    tags=["membership"],
+)
 def read_leagues(skip: int = 0, limit: int = 100, minimum_last_changed_date: date = None,
                  league_name: str = None,
                  db: Session = Depends(get_db)):
@@ -90,7 +144,15 @@ def read_leagues(skip: int = 0, limit: int = 100, minimum_last_changed_date: dat
     return leagues
 
 
-@app.get("/v0/teams/", response_model=list[schemas.Team])
+@app.get(
+    "/v0/teams/",
+    response_model=list[schemas.Team],
+    summary="Get all the SWC fantasy football teams that match the parameters you send",
+    description="""Use this endpoint to get lists of SWC fantasy football teams. You us the skip and limit to perform pagination of the API. Team name is not guaranteed to be unique. If you get the Team ID from another query such as v0_get_players, you can match it with the Team ID from this query.  Don't use the Team ID for counting or logic, because that is an internal ID and is not guaranteed to be sequential""",
+    response_description="A list of teams on the SWC fantasy football website.",
+    operation_id="v0_get_teams",
+    tags=["membership"],
+)
 def read_teams(skip: int = 0, limit: int = 100, minimum_last_changed_date: date = None,
                team_name: str = None,
                league_id: int = None,
@@ -103,8 +165,15 @@ def read_teams(skip: int = 0, limit: int = 100, minimum_last_changed_date: date 
 
     return teams
 
-
-@app.get("/v0/counts/", response_model=schemas.Counts)
+@app.get(
+    "/v0/counts/",
+    response_model=schemas.Counts,
+    summary="Get counts of the number of leagues, teams, and players in the SWC fantasy football",
+    description="""Use this endpoint to count the number of leagues, teams, and players in the SWC fantasy football. Use in combination with skip and limit in v0_get leagues, v0_get_teams, or v0_get_players. Use this endpoint to get counts instead of making calls to the other APIs.""",
+    response_description="A list of teams on the SWC fantasy football website.",
+    operation_id="v0_get_counts",
+    tags=["analytics"],
+)
 def get_count(db: Session = Depends(get_db)):
     # Get the counts of the leagues, teams, and players
     counts = schemas.Counts(league_count=crud.get_league_count(db), team_count=crud.get_team_count(db),
