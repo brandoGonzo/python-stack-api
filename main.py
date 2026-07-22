@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, Path
 from sqlalchemy.orm import Session
 from datetime import date
 
@@ -7,7 +7,7 @@ import schemas
 from database import SessionLocal  # SQLAlchemy session
 
 api_description = """
-This API provides read-only access to info from the Sports World Central (SWC) Fantasy Football API. 
+This API provides read-only access to info from the Sports World Central (SWC) Fantasy Football API.
 The endpoints are grouped into the following categories:
 
 ## Analytics
@@ -52,10 +52,15 @@ async def root():
 
 
 @app.get("/v0/players/", response_model=list[schemas.Player])
-def read_players(skip: int = 0, limit: int = 100,
-                 minimum_last_changed_date: date = None,
-                 first_name: str = None,
-                 last_name: str = None,
+def read_players(skip: int = Query(0, description="The number of items to skip at the beginning of API call."),
+                 limit: int = Query(
+                     100, description="The number of records to return after the skipped records."),
+                 minimum_last_changed_date: date = Query(
+                     None, description="The minimum date of change that you want to return records. Exclude any records changed before this."),
+                 first_name: str = Query(
+                     None, description="The first name of the players to return"),
+                 last_name: str = Query(
+                     None, description="The last name of the players to return"),
                  db: Session = Depends(get_db)):
 
     players = crud.get_players(db,
@@ -76,7 +81,8 @@ def read_players(skip: int = 0, limit: int = 100,
     operation_id="v0_get_players_by_player_id",
     tags=["players"],
 )
-def read_player(player_id: int, db: Session = Depends(get_db)):
+def read_player(player_id: int = Path(..., description="The SWC Player ID of the player you want to return."),
+                db: Session = Depends(get_db)):
     player = crud.get_player(db, player_id=player_id)
 
     # If the player is not found, raise a 404 error
@@ -95,9 +101,9 @@ def read_player(player_id: int, db: Session = Depends(get_db)):
     operation_id="v0_get_performances",
     tags=["scoring"],
 )
-def read_performances(skip: int = 0,
-                      limit: int = 100,
-                      minimum_last_changed_date: date = None,
+def read_performances(skip: int = Query(0, description="The number of items to skip at the beginning of API call."),
+                      limit: int = Query(100, description="The number of records to return after the skipped records."),
+                      minimum_last_changed_date: date = Query(None, description="The minimum date of change that you want to return records. Exclude any records changed before this."),
                       db: Session = Depends(get_db)):
 
     performances = crud.get_performances(db, skip=skip, limit=limit,
@@ -115,7 +121,8 @@ def read_performances(skip: int = 0,
     operation_id="v0_get_league_by_league_id",
     tags=["membership"],
 )
-def read_league(league_id: int, db: Session = Depends(get_db)):
+def read_league(league_id: int = Path(..., description="The SWC League ID of the league you want to return."),
+                db: Session = Depends(get_db)):
     league = crud.get_league(db, league_id=league_id)
 
     # If the league is not found, raise a 404 error
@@ -123,6 +130,7 @@ def read_league(league_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="League not found")
 
     return league
+
 
 @app.get(
     "/v0/leagues/",
@@ -133,8 +141,10 @@ def read_league(league_id: int, db: Session = Depends(get_db)):
     operation_id="v0_get_leagues",
     tags=["membership"],
 )
-def read_leagues(skip: int = 0, limit: int = 100, minimum_last_changed_date: date = None,
-                 league_name: str = None,
+def read_leagues(skip: int = Query(0, description="The number of items to skip at the beginning of API call."),
+                 limit: int = Query(100, description="The number of records to return after the skipped records."),
+                 minimum_last_changed_date: date = Query(None, description="The minimum date of change that you want to return records. Exclude any records changed before this."),
+                 league_name: str = Query(None, description="The name of the leagues to return."),
                  db: Session = Depends(get_db)):
 
     leagues = crud.get_leagues(db, skip=skip, limit=limit,
@@ -153,9 +163,11 @@ def read_leagues(skip: int = 0, limit: int = 100, minimum_last_changed_date: dat
     operation_id="v0_get_teams",
     tags=["membership"],
 )
-def read_teams(skip: int = 0, limit: int = 100, minimum_last_changed_date: date = None,
-               team_name: str = None,
-               league_id: int = None,
+def read_teams(skip: int = Query(0, description="The number of items to skip at the beginning of API call."),
+               limit: int = Query(100, description="The number of records to return after the skipped records."),
+               minimum_last_changed_date: date = Query(None, description="The minimum date of change that you want to return records. Exclude any records changed before this."),
+               team_name: str = Query(None, description="The name of the teams to return."),
+               league_id: int = Query(None, description="The SWC League ID to filter teams by."),
                db: Session = Depends(get_db)):
 
     teams = crud.get_teams(db, skip=skip, limit=limit,
@@ -164,6 +176,7 @@ def read_teams(skip: int = 0, limit: int = 100, minimum_last_changed_date: date 
                            league_id=league_id)
 
     return teams
+
 
 @app.get(
     "/v0/counts/",
