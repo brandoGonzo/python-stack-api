@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swcpy"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="[Brandon Gonzales]" },
 ]
@@ -26,4 +26,6 @@ dependencies = [
     'uvicorn>=0.23.0',
     'pydantic>=2.4.0',
     'python-dotenv',
+    'backoff>=2.2.1',
+    'pyarrow>=16.0.0',
 ]
