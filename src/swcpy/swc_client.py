@@ -29,8 +29,8 @@ class SWCClient:
     GET_COUNTS_ENDPOINT = "/v0/counts/"
 
     BULK_FILE_BASE_URL = (
-        "https://raw.githubusercontent.com/[github ID]"
-        + "/portfolio-project/main/bulk/"
+        "https://raw.githubusercontent.com/brandoGonzo/python-stack-api"
+        + "/main/workspaces/bulk/"
     )
 
     def __init__(self, input_config: config.SWCConfig):
