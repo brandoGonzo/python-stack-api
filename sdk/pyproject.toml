@@ -28,4 +28,11 @@ dependencies = [
     'python-dotenv',
     'backoff>=2.2.1',
     'pyarrow>=16.0.0',
+    'pandas>=2.0.0',
 ]
+
+[tool.setuptools]
+package-dir = {"" = "../src"}
+
+[tool.setuptools.packages.find]
+where = ["../src"]

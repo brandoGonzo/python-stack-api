@@ -7,3 +7,5 @@ fastapi[standard]>=0.115.0
 uvicorn>=0.23.0
 pydantic>=2.4.0
 backoff>=2.2.1
+pyarrow>=16.0.0
+pandas>=2.0.0
