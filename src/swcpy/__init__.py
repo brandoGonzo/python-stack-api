@@ -1,2 +1,2 @@
-from .swc_client import SwcClient
-from .swc_config import SwcConfig
+from .swc_client import SWCClient
+from .swc_config import SWCConfig
