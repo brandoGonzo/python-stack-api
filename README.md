@@ -53,4 +53,6 @@ with httpx.Client(base_url=self.swc_base_url) as client:
 ```
 
 ## Software Development Kit (SDK)
-*Coming Soon*
+
+If you are a Python user, you can use the swcpy SDK to interact with our API. 
+Full information is available [here](sdk/README.md).

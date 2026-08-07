@@ -77,6 +77,7 @@ class SWCClient:
                  api_params: dict = None
                  ) -> httpx.Response:
         """Makes API call and logs errors."""
+
         if api_params:
             api_params = {key: val for key,
                           val in api_params.items() if val is not None}
@@ -142,6 +143,146 @@ class SWCClient:
         response = self.call_api(self.LIST_LEAGUES_ENDPOINT, params)
         return [League(**league) for league in response.json()]
 
+    def get_league_by_id(self, league_id: int) -> League:
+        """Returns a Leagues matching a league_id.
+
+        Calls the API v0/leagues/{league_id} endpoint and returns single League.
+
+        Returns:
+        A schemas.League objects representing one SportsWorldCentral fantasy league.
+
+        """
+        logger.debug("Entered get league by ID")
+        # build URL
+        endpoint_url = f"{self.LIST_LEAGUES_ENDPOINT}{league_id}"
+        # make the API call
+        response = self.call_api(endpoint_url)
+        responseLeague = League(**response.json())
+        return responseLeague
+
+    def get_counts(self) -> Counts:
+        """Returns Counts of several endpoints.
+
+        Calls the API v0/counts endpoint and returns a Counts object.
+
+        Returns:
+        Counts object representing counts of elements in the API.,
+
+        """
+        logger.debug("Entered get counts")
+
+        response = self.call_api(self.GET_COUNTS_ENDPOINT)
+        responseCounts = Counts(**response.json())
+        return responseCounts
+
+    def list_teams(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        minimum_last_changed_date: str = None,
+        team_name: str = None,
+        league_id: int = None,
+    ):
+        """Returns a List of Teams filtered by parameters.
+
+        Calls the API v0/teams endpoint and returns a list of
+        Team objects.
+
+        Returns:
+        A List of schemas.Team objects. Each represents one
+        team in a SportsWorldCentral fantasy league.
+
+        """
+
+        logger.debug("Entered list teams")
+
+        params = {
+            "skip": skip,
+            "limit": limit,
+            "minimum_last_changed_date": minimum_last_changed_date,
+            "team_name": team_name,
+            "league_id": league_id,
+        }
+        response = self.call_api(self.LIST_TEAMS_ENDPOINT, params)
+        return [Team(**team) for team in response.json()]
+
+    def list_players(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        minimum_last_changed_date: str = None,
+        first_name: str = None,
+        last_name: str = None,
+    ):
+        """Returns a List of Players filtered by parameters.
+
+        Calls the API v0/players endpoint and returns a list of
+        Player objects.
+
+        Returns:
+        A List of schemas.Player objects. Each represents one
+        NFL player.
+
+        """
+        logger.debug("Entered list players")
+
+        params = {
+            "skip": skip,
+            "limit": limit,
+            "minimum_last_changed_date": minimum_last_changed_date,
+            "first_name": first_name,
+            "last_name": last_name,
+        }
+
+        response = self.call_api(self.LIST_PLAYERS_ENDPOINT, params)
+        return [Player(**player) for player in response.json()]
+
+    def get_player_by_id(self, player_id: int):
+        """Returns a Players matching the SWC Player ID.
+
+        Calls the API v0/players/{player_id} endpoint and returns
+        one Player pboject.
+
+        Returns:
+        A List of schemas.Player object representing an
+        NFL player.
+
+        """
+        logger.debug("Entered get player by ID")
+
+        # build URL
+        endpoint_url = f"{self.LIST_PLAYERS_ENDPOINT}{player_id}"
+        # make the API call
+        response = self.call_api(endpoint_url)
+        responsePlayer = Player(**response.json())
+        return responsePlayer
+
+    def list_performances(
+        self, skip: int = 0, limit: int = 100, minimum_last_changed_date: str = None
+    ):
+        """Returns a List of Performances filtered by parameters.
+
+        Calls the API v0/performances endpoint and returns a list of
+        Performance objects.
+
+        Returns:
+        A List of schemas.Performance objects. Each represents one
+        player's scoring for one NFL week.
+
+        """
+        logger.debug("Entered get performances")
+
+        params = {
+            "skip": skip,
+            "limit": limit,
+            "minimum_last_changed_date": minimum_last_changed_date,
+        }
+
+        response = self.call_api(self.LIST_PERFORMANCES_ENDPOINT, params)
+        return [Performance(**peformance) for peformance in response.json()]
+
+# bulk endpoints
+
     def get_bulk_player_file(self) -> bytes:
         """Returns a bulk file with player data"""
 
@@ -151,6 +292,64 @@ class SWCClient:
             self.BULK_FILE_NAMES["players"]
 
         response = httpx.get(player_file_path, follow_redirects=True)
+
+        if response.status_code == 200:
+            logger.debug("File downloaded successfully")
+            return response.content
+
+    def get_bulk_league_file(self) -> bytes:
+        """Returns a CSV file with league data"""
+
+        logger.debug("Entered get bulk league file")
+
+        league_file_path = self.BULK_FILE_BASE_URL + \
+            self.BULK_FILE_NAMES["leagues"]
+
+        response = httpx.get(league_file_path, follow_redirects=True)
+
+        if response.status_code == 200:
+            logger.debug("File downloaded successfully")
+            return response.content
+
+    def get_bulk_performance_file(self) -> bytes:
+        """Returns a CSV file with performance data"""
+
+        logger.debug("Entered get bulk performance file")
+
+        performance_file_path = (
+            self.BULK_FILE_BASE_URL + self.BULK_FILE_NAMES["performances"]
+        )
+
+        response = httpx.get(performance_file_path, follow_redirects=True)
+
+        if response.status_code == 200:
+            logger.debug("File downloaded successfully")
+            return response.content
+
+    def get_bulk_team_file(self) -> bytes:
+        """Returns a CSV file with team data"""
+
+        logger.debug("Entered get bulk team file")
+
+        team_file_path = self.BULK_FILE_BASE_URL + \
+            self.BULK_FILE_NAMES["teams"]
+
+        response = httpx.get(team_file_path, follow_redirects=True)
+
+        if response.status_code == 200:
+            logger.debug("File downloaded successfully")
+            return response.content
+
+    def get_bulk_team_player_file(self) -> bytes:
+        """Returns a CSV file with team player data"""
+
+        logger.debug("Entered get bulk team player file")
+
+        team_player_file_path = (
+            self.BULK_FILE_BASE_URL + self.BULK_FILE_NAMES["team_players"]
+        )
+
+        response = httpx.get(team_player_file_path, follow_redirects=True)
 
         if response.status_code == 200:
             logger.debug("File downloaded successfully")
